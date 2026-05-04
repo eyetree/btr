@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
 use crate::check::snapshot;
@@ -7,16 +7,25 @@ fn write_err(e: std::io::Error) -> String {
     format!("Write error: {}", e)
 }
 
+fn export_dir() -> Result<PathBuf, String> {
+    let home = dirs::home_dir().ok_or("Could not find home directory")?;
+    let dir = home.join(".btr").join("exports");
+    fs::create_dir_all(&dir).map_err(|e| format!("Could not create export directory: {}", e))?;
+    Ok(dir)
+}
+
 pub fn run(format: &str) -> Result<(), String> {
     let s = snapshot()?;
     let now = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
     let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
-    let path: PathBuf = match format {
-        "json" => format!("btr_export_{}.json", now).into(),
-        "csv"  => format!("btr_export_{}.csv", now).into(),
+    let dir = export_dir()?;
+    let filename = match format {
+        "json" => format!("btr_export_{}.json", now),
+        "csv"  => format!("btr_export_{}.csv", now),
         _      => return Err(format!("Unknown format '{}'. Use json or csv.", format)),
     };
+    let path = dir.join(&filename);
 
     let mut file = File::create(&path)
         .map_err(|e| format!("Could not create file: {}", e))?;
