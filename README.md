@@ -7,8 +7,8 @@ A lightweight, cross-platform CLI tool for battery diagnostics written in Rust.
 ```bash
 btr -C
 ```
-##
-Install
+
+## Install
 
 My tool requires [Rust](https://rustup.rs) to be installed.
 
@@ -16,7 +16,8 @@ My tool requires [Rust](https://rustup.rs) to be installed.
 cargo install --git https://github.com/eyetree/btr
 ```
 
-Output
+## Output
+
 btr - Battery Diagnostics
 Charge:       87.3%
 Status:       Discharging
@@ -29,7 +30,7 @@ Time left:    4h 23m
 CPU temp:     unavailable*
 RAM usage:    8.2 / 32.0 GB
 
-*CPU temperature requires admin privileges on Windows and may be unavailable on some systems.
+*CPU temperature requires admin privileges on Windows and may be unavailable on some systems.*
 
 ## License
 
