@@ -1,6 +1,6 @@
 # btr - Battery Diagnostic Tool
 
-A lightweight, cross-platform CLI tool for battery diagnostics written in Rust.
+A cross platform CLI battery diagnostic tool written in Rust, designed to be lightweight, informative and fast.
 
 ## Usage
 
