@@ -1,6 +1,8 @@
 use battery::Manager;
 use sysinfo::{ComponentExt, System, SystemExt};
+use crossterm::style::Color;
 use crate::history;
+use crate::color;
 
 pub struct BatterySnapshot {
     pub percentage: f32,
@@ -37,15 +39,10 @@ pub fn snapshot() -> Result<BatterySnapshot, String> {
     }.to_string();
 
     let health = battery.state_of_health().value * 100.0;
-
-    // .value is in joules — divide by 3600 to get Wh
     let design_cap = battery.energy_full_design().value / 3600.0;
     let full_cap = battery.energy_full().value / 3600.0;
     let wear = 100.0 - health;
-
-    // energy_rate is in watts already
     let watts = battery.energy_rate().value;
-
     let cycle_count = battery.cycle_count();
 
     let mut sys = System::new_all();
@@ -65,40 +62,60 @@ pub fn snapshot() -> Result<BatterySnapshot, String> {
     let total_gb = sys.total_memory() as f64 / 1_073_741_824.0;
 
     Ok(BatterySnapshot {
-        percentage,
-        status,
-        health,
-        design_cap,
-        full_cap,
-        wear,
-        watts,
-        cpu_temp,
-        used_gb,
-        total_gb,
-        cycle_count,
+        percentage, status, health, design_cap, full_cap,
+        wear, watts, cpu_temp, used_gb, total_gb, cycle_count,
     })
 }
 
 pub fn print_snapshot(s: &BatterySnapshot) {
-    println!("-----------------------------");
-    println!("  btr - Battery Diagnostics");
-    println!("-----------------------------");
-    println!("  Charge:       {:.1}%", s.percentage);
-    println!("  Status:       {}", s.status);
-    println!("  Health:       {:.1}%", s.health);
+    color::dim("-----------------------------");
+    color::info("  btr - Battery Diagnostics");
+    color::dim("-----------------------------");
+
+    print!("  Charge:       ");
+    color::println_colored(&format!("{:.1}%", s.percentage), color::charge_color(s.percentage));
+
+    let status_color = match s.status.as_str() {
+        "Charging" => Color::Green,
+        "Discharging" => Color::Yellow,
+        "Full" => Color::Cyan,
+        _ => Color::Grey,
+    };
+    print!("  Status:       ");
+    color::println_colored(&s.status, status_color);
+
+    print!("  Health:       ");
+    color::println_colored(&format!("{:.1}%", s.health), color::health_color(s.health));
+
     println!("  Design cap:   {:.1} Wh", s.design_cap);
     println!("  Current cap:  {:.1} Wh", s.full_cap);
-    println!("  Wear level:   {:.1}%", s.wear);
+
+    print!("  Wear level:   ");
+    color::println_colored(&format!("{:.1}%", s.wear), color::wear_color(s.wear));
+
     if s.watts > 0.0 {
-        println!("  Power draw:   {:.2} W", s.watts);
+        print!("  Power draw:   ");
+        color::println_colored(&format!("{:.2} W", s.watts), color::watts_color(s.watts));
     }
-    println!("-----------------------------");
+
+    color::dim("-----------------------------");
+
     match s.cpu_temp {
-        Some(temp) => println!("  CPU temp:     {:.1}C", temp),
-        None => println!("  CPU temp:     unavailable"),
+        Some(t) => {
+            print!("  CPU temp:     ");
+            color::println_colored(&format!("{:.1}C", t), color::temp_color(t));
+        }
+        None => color::dim("  CPU temp:     unavailable"),
     }
-    println!("  RAM usage:    {:.1} / {:.1} GB", s.used_gb, s.total_gb);
-    println!("-----------------------------");
+
+    let ram_pct = (s.used_gb / s.total_gb * 100.0) as f32;
+    let ram_color = if ram_pct < 60.0 { Color::Green }
+                   else if ram_pct < 85.0 { Color::Yellow }
+                   else { Color::Red };
+    print!("  RAM usage:    ");
+    color::println_colored(&format!("{:.1} / {:.1} GB", s.used_gb, s.total_gb), ram_color);
+
+    color::dim("-----------------------------");
 }
 
 pub fn run(save_history: bool) -> Result<(), String> {
