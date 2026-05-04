@@ -2,6 +2,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 use crate::check::BatterySnapshot;
+use crate::color;
 
 fn history_path() -> Result<PathBuf, String> {
     let home = dirs::home_dir().ok_or("Could not find home directory")?;
@@ -28,7 +29,7 @@ pub fn save(s: &BatterySnapshot) -> Result<(), String> {
     Ok(())
 }
 
-pub fn show() -> Result<(), String> {
+pub fn show(last: usize) -> Result<(), String> {
     let path = history_path()?;
 
     if !path.exists() {
@@ -40,21 +41,39 @@ pub fn show() -> Result<(), String> {
         .map_err(|e| format!("Could not read history file: {}", e))?;
 
     let lines: Vec<&str> = contents.lines().collect();
+    let count = if last == 0 { 20 } else { last };
+    let start = if lines.len() > count { lines.len() - count } else { 0 };
 
-    println!("-----------------------------");
-    println!("  btr - Battery History");
-    println!("  {} entries", lines.len());
-    println!("-----------------------------");
+    color::dim("-----------------------------");
+    color::info("  btr - Battery History");
+    color::dim(&format!("  {} entries (showing {})", lines.len(), lines.len() - start));
+    color::dim("-----------------------------");
 
-    // Show last 20 entries
-    let start = if lines.len() > 20 { lines.len() - 20 } else { 0 };
     for line in &lines[start..] {
         println!("  {}", line);
     }
 
-    println!("-----------------------------");
-    println!("  Log: {}", path.display());
-    println!("-----------------------------");
+    color::dim("-----------------------------");
+    color::dim(&format!("  Log: {}", path.display()));
+    color::dim("-----------------------------");
+
+    Ok(())
+}
+
+pub fn clean() -> Result<(), String> {
+    let path = history_path()?;
+
+    if !path.exists() {
+        println!("No history log found — nothing to clean.");
+        return Ok(());
+    }
+
+    fs::remove_file(&path)
+        .map_err(|e| format!("Could not delete history: {}", e))?;
+
+    color::dim("-----------------------------");
+    color::good("  History log cleared.");
+    color::dim("-----------------------------");
 
     Ok(())
 }
