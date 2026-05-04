@@ -1,0 +1,15 @@
+[package]
+name = "btr"
+version = "0.1.0"
+edition = "2021"
+description = "Battery diagnostic CLI tool"
+authors = ["eyetree"]
+
+[[bin]]
+name = "btr"
+path = "src/main.rs"
+
+[dependencies]
+battery = "0.7"
+sysinfo = "0.29"
+clap = { version = "4", features = ["derive"] }
