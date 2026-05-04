@@ -33,7 +33,9 @@ cargo install --git https://github.com/eyetree/btr
 ## Color output
 
 🟢 Green — good, healthy, normal
+
 🟡 Yellow — warning, worth watching  
+
 🔴 Red — critical, action needed
 
 Applies to: charge %, health %, wear level, power draw, CPU temp, RAM usage, scores and alerts.
