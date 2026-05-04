@@ -18,6 +18,7 @@ cargo install --git https://github.com/eyetree/btr
 
 ## Output
 
+```text
 btr - Battery Diagnostics
 Charge:       87.3%
 Status:       Discharging
@@ -29,6 +30,7 @@ Power draw:   12.40 W
 Time left:    4h 23m
 CPU temp:     unavailable*
 RAM usage:    8.2 / 32.0 GB
+```
 
 *CPU temperature requires admin privileges on Windows and may be unavailable on some systems.*
 
