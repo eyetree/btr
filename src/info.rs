@@ -1,5 +1,51 @@
 use battery::Manager;
 
+fn guess_technology(manufacturer: &str, model: &str) -> &'static str {
+    let mfr = manufacturer.to_lowercase();
+    let mdl = model.to_lowercase();
+
+    // Most modern laptop batteries are Li-Ion or LiPo
+    // ATL (Amperex Technology Limited) makes Li-Ion and LiPo cells
+    // Common laptop battery model prefixes that indicate Li-Ion
+    if mfr.contains("atl") || mfr.contains("amperex") {
+        return "Lithium Ion (ATL)";
+    }
+    if mfr.contains("lgc") || mfr.contains("lg chem") {
+        return "Lithium Ion (LG)";
+    }
+    if mfr.contains("samsung") || mfr.contains("sdl") {
+        return "Lithium Ion (Samsung)";
+    }
+    if mfr.contains("panasonic") || mfr.contains("sanyo") {
+        return "Lithium Ion (Panasonic)";
+    }
+    if mfr.contains("sony") || mfr.contains("murata") {
+        return "Lithium Ion (Sony/Murata)";
+    }
+    if mfr.contains("sunwoda") {
+        return "Lithium Ion (Sunwoda)";
+    }
+    if mfr.contains("celxpert") || mfr.contains("simplo") {
+        return "Lithium Ion (Simplo)";
+    }
+
+    // Check model name for clues
+    if mdl.contains("lipo") || mdl.contains("polymer") {
+        return "Lithium Polymer";
+    }
+    if mdl.contains("life") || mdl.contains("lifepo") {
+        return "Lithium Iron Phosphate";
+    }
+
+    // Lenovo model prefix patterns (L = Lithium)
+    if mdl.starts_with('l') && mdl.len() >= 8 {
+        return "Lithium Ion (inferred)";
+    }
+
+    // Safe default for modern laptops
+    "Lithium Ion (assumed)"
+}
+
 pub fn run() -> Result<(), String> {
     let manager = Manager::new().map_err(|e| format!("Failed to access battery manager: {}", e))?;
     let mut batteries = manager
@@ -28,7 +74,7 @@ pub fn run() -> Result<(), String> {
         battery::Technology::NickelZinc => "Nickel Zinc",
         battery::Technology::LithiumIronPhosphate => "Lithium Iron Phosphate",
         battery::Technology::RechargeableAlkalineManganese => "Rechargeable Alkaline",
-        _ => "Unknown",
+        _ => guess_technology(manufacturer, model),
     };
 
     let cycle_count = battery.cycle_count()
@@ -43,7 +89,6 @@ pub fn run() -> Result<(), String> {
 
     println!("-----------------------------");
 
-    // Build DuckDuckGo search query
     let query = match (manufacturer, model) {
         ("Unknown", "Unknown") => "laptop battery replacement".to_string(),
         (m, "Unknown") => format!("{} laptop battery replacement", m),
